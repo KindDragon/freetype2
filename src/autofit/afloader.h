@@ -75,6 +75,11 @@ FT_BEGIN_HEADER
                         FT_UInt    gindex,
                         FT_Int32   load_flags );
 
+  FT_LOCAL_DEF( FT_Error )
+  af_loader_embolden_glyph_in_slot( AF_Loader       loader,
+                                    FT_Face         face,
+                                    AF_StyleMetrics style_metrics );
+
   FT_LOCAL_DEF( FT_Int32 )
   af_loader_compute_darkening( AF_Loader  loader,
                                FT_Face    face,
