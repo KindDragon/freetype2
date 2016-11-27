@@ -23,8 +23,6 @@
 #include "afmodule.h"
 #include "afpic.h"
 
-#include FT_INTERNAL_CALC_H
-
 
   /* Initialize glyph loader. */
 
@@ -82,127 +80,31 @@
           ( (FT_Fixed)( (FT_UInt32)(i) << 16 ) )
 #define af_fixedToInt( x ) \
           ( (FT_Short)( ( (FT_UInt32)(x) + 0x8000U ) >> 16 ) )
-#define af_floatToFixed( f ) \
-          ( (FT_Fixed)( (f) * 65536.0 + 0.5 ) )
 
 
-  static FT_Error
-  af_loader_embolden_glyph_in_slot( AF_Loader        loader,
-                                    FT_Face          face,
-                                    AF_StyleMetrics  style_metrics )
+  FT_LOCAL( void )
+  af_loader_embolden_glyph_in_slot( AF_Loader  loader,
+                                    FT_Face    face )
   {
-    FT_Error  error = FT_Err_Ok;
-
-    FT_GlyphSlot           slot    = face->glyph;
-    AF_FaceGlobals         globals = loader->globals;
-    AF_WritingSystemClass  writing_system_class;
-
-    FT_Pos  stdVW = 0;
-    FT_Pos  stdHW = 0;
-
-    FT_Bool  size_changed = face->size->metrics.x_ppem
-                              != globals->stem_darkening_for_ppem;
-
-    FT_Fixed  em_size  = af_intToFixed( face->units_per_EM );
-    FT_Fixed  em_ratio = FT_DivFix( af_intToFixed( 1000 ), em_size );
-
-    FT_Matrix  scale_down_matrix = { 0x10000L, 0, 0, 0x10000L };
+    AF_FaceGlobals globals  = loader->globals;
+    FT_Fixed       darken_x, darken_y;
+    FT_Fixed       em_size  = af_intToFixed( face->units_per_EM );
+    FT_Fixed       em_ratio = FT_DivFix( af_intToFixed( 1000 ), em_size );
 
 
-    /* Skip stem darkening for broken fonts. */
-    if ( !face->units_per_EM )
-    {
-      error = FT_ERR( Corrupted_Font_Header );
-      goto Exit;
-    }
+    darken_x = FT_DivFix( FT_MulFix( af_intToFixed( globals->darken_x ),
+                                     face->size->metrics.x_scale ),
+                          em_ratio );
 
-    /*
-     *  We depend on the writing system (script analyzers) to supply
-     *  standard widths for the script of the glyph we are looking at.  If
-     *  it can't deliver, stem darkening is disabled.
-     */
-    writing_system_class =
-      AF_WRITING_SYSTEM_CLASSES_GET[style_metrics->style_class->writing_system];
-
-    if ( writing_system_class->style_metrics_getstdw )
-      writing_system_class->style_metrics_getstdw( style_metrics,
-                                                   &stdHW,
-                                                   &stdVW );
-    else
-    {
-      error = FT_ERR( Unimplemented_Feature );
-      goto Exit;
-    }
-
-    if ( size_changed                                               ||
-         ( stdVW > 0 && stdVW != globals->standard_vertical_width ) )
-    {
-      FT_Fixed  darken_by_font_units_x, darken_x;
+    darken_y = FT_DivFix( FT_MulFix( af_intToFixed( globals->darken_y ),
+                                     face->size->metrics.y_scale ),
+                          em_ratio );
 
 
-      darken_by_font_units_x =
-        af_intToFixed( af_loader_compute_darkening( loader,
-                                                    face,
-                                                    stdVW ) );
-      darken_x = FT_DivFix( FT_MulFix( darken_by_font_units_x,
-                                       face->size->metrics.x_scale ),
-                            em_ratio );
+    FT_Outline_EmboldenXY( &face->glyph->outline,
+                           af_fixedToInt( darken_x ),
+                           af_fixedToInt( darken_y ) );
 
-      globals->standard_vertical_width = stdVW;
-      globals->stem_darkening_for_ppem = face->size->metrics.x_ppem;
-      globals->darken_x                = af_fixedToInt( darken_x );
-    }
-
-    if ( size_changed                                                 ||
-         ( stdHW > 0 && stdHW != globals->standard_horizontal_width ) )
-    {
-      FT_Fixed  darken_by_font_units_y, darken_y;
-
-
-      darken_by_font_units_y =
-        af_intToFixed( af_loader_compute_darkening( loader,
-                                                    face,
-                                                    stdHW ) );
-      darken_y = FT_DivFix( FT_MulFix( darken_by_font_units_y,
-                                       face->size->metrics.y_scale ),
-                            em_ratio );
-
-      globals->standard_horizontal_width = stdHW;
-      globals->stem_darkening_for_ppem   = face->size->metrics.x_ppem;
-      globals->darken_y                  = af_fixedToInt( darken_y );
-
-      /*
-       *  Scale outlines down on the Y-axis to keep them inside their blue
-       *  zones.  The stronger the emboldening, the stronger the downscaling
-       *  (plus heuristical padding to prevent outlines still falling out
-       *  their zones due to rounding).
-       *
-       *  Reason: `FT_Outline_Embolden' works by shifting the rightmost
-       *  points of stems farther to the right, and topmost points farther
-       *  up.  This positions points on the Y-axis outside their
-       *  pre-computed blue zones and leads to distortion when applying the
-       *  hints in the code further below.  Code outside this emboldening
-       *  block doesn't know we are presenting it with modified outlines the
-       *  analyzer didn't see!
-       *
-       *  An unfortunate side effect of downscaling is that the emboldening
-       *  effect is slightly decreased.  The loss becomes more pronounced
-       *  versus the CFF driver at smaller sizes, e.g., at 9ppem and below.
-       */
-      globals->scale_down_factor =
-        FT_DivFix( em_size - ( darken_by_font_units_y + af_intToFixed( 8 ) ),
-                   em_size );
-    }
-
-    FT_Outline_EmboldenXY( &slot->outline,
-                           globals->darken_x,
-                           globals->darken_y );
-
-    scale_down_matrix.yy = globals->scale_down_factor;
-    FT_Outline_Transform( &slot->outline, &scale_down_matrix );
-
-  Exit:
-    return error;
   }
 
 
@@ -344,7 +246,8 @@
          ( !face->internal->no_stem_darkening        ||
            ( face->internal->no_stem_darkening < 0 &&
              !module->no_stem_darkening            ) ) )
-      af_loader_embolden_glyph_in_slot( loader, face, style_metrics );
+      af_loader_embolden_glyph_in_slot( loader, face );
+
 
     loader->transformed = internal->glyph_transformed;
     if ( loader->transformed )
@@ -541,136 +444,6 @@
 
   Exit:
     return error;
-  }
-
-
-  /*
-   * Compute amount of font units the face should be emboldened by, in
-   * analogy to the CFF driver's `cf2_computeDarkening' function.  See there
-   * for details of the algorithm.
-   *
-   * XXX: Currently a crude adaption of the original algorithm.  Do better?
-   */
-  FT_LOCAL_DEF( FT_Int32 )
-  af_loader_compute_darkening( AF_Loader  loader,
-                               FT_Face    face,
-                               FT_Pos     standard_width )
-  {
-    AF_Module  module = loader->globals->module;
-
-    FT_UShort  units_per_EM;
-    FT_Fixed   ppem, em_ratio;
-    FT_Fixed   stem_width, stem_width_per_1000, scaled_stem, darken_amount;
-    FT_Int     log_base_2;
-    FT_Int     x1, y1, x2, y2, x3, y3, x4, y4;
-
-
-    ppem         = FT_MAX( af_intToFixed( 4 ),
-                           af_intToFixed( face->size->metrics.x_ppem ) );
-    units_per_EM = face->units_per_EM;
-
-    em_ratio = FT_DivFix( af_intToFixed( 1000 ),
-                          af_intToFixed ( units_per_EM ) );
-    if ( em_ratio < af_floatToFixed( .01 ) )
-    {
-      /* If something goes wrong, don't embolden. */
-      return 0;
-    }
-
-    x1 = module->darken_params[0];
-    y1 = module->darken_params[1];
-    x2 = module->darken_params[2];
-    y2 = module->darken_params[3];
-    x3 = module->darken_params[4];
-    y3 = module->darken_params[5];
-    x4 = module->darken_params[6];
-    y4 = module->darken_params[7];
-
-    if ( standard_width <= 0 )
-    {
-      stem_width          = af_intToFixed( 75 ); /* taken from cf2font.c */
-      stem_width_per_1000 = stem_width;
-    }
-    else
-    {
-      stem_width          = af_intToFixed( standard_width );
-      stem_width_per_1000 = FT_MulFix( stem_width, em_ratio );
-    }
-
-    log_base_2 = FT_MSB( (FT_UInt32)stem_width_per_1000 ) +
-                 FT_MSB( (FT_UInt32)ppem );
-
-    if ( log_base_2 >= 46 )
-    {
-      /* possible overflow */
-      scaled_stem = af_intToFixed( x4 );
-    }
-    else
-      scaled_stem = FT_MulFix( stem_width_per_1000, ppem );
-
-    /* now apply the darkening parameters */
-    if ( scaled_stem < af_intToFixed( x1 ) )
-      darken_amount = FT_DivFix( af_intToFixed( y1 ), ppem );
-
-    else if ( scaled_stem < af_intToFixed( x2 ) )
-    {
-      FT_Int  xdelta = x2 - x1;
-      FT_Int  ydelta = y2 - y1;
-      FT_Int  x      = stem_width_per_1000 -
-                       FT_DivFix( af_intToFixed( x1 ), ppem );
-
-
-      if ( !xdelta )
-        goto Try_x3;
-
-      darken_amount = FT_MulDiv( x, ydelta, xdelta ) +
-                      FT_DivFix( af_intToFixed( y1 ), ppem );
-    }
-
-    else if ( scaled_stem < af_intToFixed( x3 ) )
-    {
-    Try_x3:
-      {
-        FT_Int  xdelta = x3 - x2;
-        FT_Int  ydelta = y3 - y2;
-        FT_Int  x      = stem_width_per_1000 -
-                         FT_DivFix( af_intToFixed( x2 ), ppem );
-
-
-        if ( !xdelta )
-          goto Try_x4;
-
-        darken_amount = FT_MulDiv( x, ydelta, xdelta ) +
-                        FT_DivFix( af_intToFixed( y2 ), ppem );
-      }
-    }
-
-    else if ( scaled_stem < af_intToFixed( x4 ) )
-    {
-    Try_x4:
-      {
-        FT_Int  xdelta = x4 - x3;
-        FT_Int  ydelta = y4 - y3;
-        FT_Int  x      = stem_width_per_1000 -
-                         FT_DivFix( af_intToFixed( x3 ), ppem );
-
-
-        if ( !xdelta )
-          goto Use_y4;
-
-        darken_amount = FT_MulDiv( x, ydelta, xdelta ) +
-                        FT_DivFix( af_intToFixed( y3 ), ppem );
-      }
-    }
-
-    else
-    {
-    Use_y4:
-      darken_amount = FT_DivFix( af_intToFixed( y4 ), ppem );
-    }
-
-    /* Convert darken_amount from per 1000 em to true character space. */
-    return af_fixedToInt( FT_DivFix( darken_amount, em_ratio ) );
   }
 
 
