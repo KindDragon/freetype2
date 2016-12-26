@@ -2421,6 +2421,11 @@
       internal->transform_delta.y = 0;
 
       internal->refcount = 1;
+
+      internal->no_stem_darkening = -1;
+#ifdef FT_CONFIG_OPTION_SUBPIXEL_RENDERING
+      ft_memset( internal->lcd_weights, 0, FT_LCD_FILTER_FIVE_TAPS );
+#endif
     }
 
     if ( aface )
@@ -3581,6 +3586,66 @@
       *agindex = gindex;
 
     return result;
+  }
+
+
+  /* documentation is in freetype.h */
+
+  FT_EXPORT_DEF( FT_Error )
+  FT_Face_Option( FT_Face       face,
+                  FT_UInt       num_params,
+                  FT_Parameter* parameters)
+  {
+    FT_Error   error = FT_Err_Ok;
+
+
+    if ( num_params > 0 && !parameters )
+    {
+      error = FT_THROW( Invalid_Argument );
+      goto Exit;
+    }
+
+    for ( ; num_params > 0; num_params-- )
+    {
+      if ( parameters->tag == FT_FACE_OPTION_ENABLE_STEM_DARKENING )
+      {
+        if ( parameters->data )
+        {
+          if ( *((FT_Bool*)parameters->data) == TRUE )
+            face->internal->no_stem_darkening = FALSE;
+          else
+            face->internal->no_stem_darkening = TRUE;
+        }
+        else /* Use module default. */
+          face->internal->no_stem_darkening = -1;
+      }
+      else if ( parameters->tag == FT_FACE_OPTION_SET_LCD_FILTER_WEIGHTS )
+      {
+#ifdef FT_CONFIG_OPTION_SUBPIXEL_RENDERING
+        if ( parameters->data )
+          ft_memcpy( face->internal->lcd_weights, parameters->data, FT_LCD_FILTER_FIVE_TAPS );
+        else /* NULL == no custom weights, use library default. Signaled by
+                filling the weight field with zeros. */
+          ft_memset( face->internal->lcd_weights, 0, FT_LCD_FILTER_FIVE_TAPS );
+#else
+        error = FT_THROW( Unimplemented_Feature );
+        goto Exit;
+#endif
+      }
+      else
+      {
+        error = FT_THROW( Invalid_Argument );
+        goto Exit;
+      }
+
+      if ( error )
+        break;
+
+      parameters++;
+    }
+
+  Exit:
+    return error;
   }
 
 

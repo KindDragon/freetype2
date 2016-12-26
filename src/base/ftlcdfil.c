@@ -30,12 +30,11 @@
 #define  USE_LEGACY
 
   /* FIR filter used by the default and light filters */
-  static void
-  _ft_lcd_filter_fir( FT_Bitmap*      bitmap,
-                      FT_Render_Mode  mode,
-                      FT_Library      library )
+  FT_BASE( void )
+  ft_lcd_filter_fir( FT_Bitmap*          bitmap,
+                     FT_Render_Mode      mode,
+                     FT_LcdFiveTapFilter weights )
   {
-    FT_Byte*  weights = library->lcd_weights;
     FT_UInt   width   = (FT_UInt)bitmap->width;
     FT_UInt   height  = (FT_UInt)bitmap->rows;
 
@@ -176,7 +175,7 @@
   static void
   _ft_lcd_filter_legacy( FT_Bitmap*      bitmap,
                          FT_Render_Mode  mode,
-                         FT_Library      library )
+                         FT_Byte*        weights )
   {
     FT_UInt  width  = (FT_UInt)bitmap->width;
     FT_UInt  height = (FT_UInt)bitmap->rows;
@@ -189,7 +188,7 @@
       { 65538 * 1/13, 65538 * 1/6, 65538 * 9/13 }
     };
 
-    FT_UNUSED( library );
+    FT_UNUSED( weights );
 
 
     /* horizontal in-place intra-pixel filter */
@@ -295,8 +294,8 @@
     if ( !weights )
       return FT_THROW( Invalid_Argument );
 
-    ft_memcpy( library->lcd_weights, weights, 5 );
-    library->lcd_filter_func = _ft_lcd_filter_fir;
+    ft_memcpy( library->lcd_weights, weights, FT_LCD_FILTER_FIVE_TAPS );
+    library->lcd_filter_func = ft_lcd_filter_fir;
     library->lcd_extra       = 2;
 
     return FT_Err_Ok;
@@ -307,12 +306,6 @@
   FT_Library_SetLcdFilter( FT_Library    library,
                            FT_LcdFilter  filter )
   {
-    static const FT_Byte  default_filter[5] =
-                            { 0x08, 0x4d, 0x56, 0x4d, 0x08 };
-    static const FT_Byte  light_filter[5] =
-                            { 0x00, 0x55, 0x56, 0x55, 0x00 };
-
-
     if ( !library )
       return FT_THROW( Invalid_Library_Handle );
 
@@ -324,14 +317,14 @@
       break;
 
     case FT_LCD_FILTER_DEFAULT:
-      ft_memcpy( library->lcd_weights, default_filter, 5 );
-      library->lcd_filter_func = _ft_lcd_filter_fir;
+      ft_memcpy( library->lcd_weights, FT_LCD_FILTER_DEFAULT_WEIGHTS, FT_LCD_FILTER_FIVE_TAPS );
+      library->lcd_filter_func = ft_lcd_filter_fir;
       library->lcd_extra       = 2;
       break;
 
     case FT_LCD_FILTER_LIGHT:
-      ft_memcpy( library->lcd_weights, light_filter, 5 );
-      library->lcd_filter_func = _ft_lcd_filter_fir;
+      ft_memcpy( library->lcd_weights, FT_LCD_FILTER_LIGHT_WEIGHTS, FT_LCD_FILTER_FIVE_TAPS );
+      library->lcd_filter_func = ft_lcd_filter_fir;
       library->lcd_extra       = 2;
       break;
 
@@ -355,6 +348,16 @@
   }
 
 #else /* !FT_CONFIG_OPTION_SUBPIXEL_RENDERING */
+
+  FT_BASE( void )
+  ft_lcd_filter_fir( FT_Bitmap*          bitmap,
+                     FT_Render_Mode      mode,
+                     FT_LcdFiveTapFilter weights )
+  {
+    FT_UNUSED( bitmap );
+    FT_UNUSED( mode );
+    FT_UNUSED( weights );
+  }
 
   FT_EXPORT_DEF( FT_Error )
   FT_Library_SetLcdFilterWeights( FT_Library      library,

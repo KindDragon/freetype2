@@ -197,6 +197,16 @@ FT_BEGIN_HEADER
 
   } FT_LcdFilter;
 
+  #define FT_LCD_FILTER_FIVE_TAPS 5
+
+  typedef FT_Byte FT_LcdFiveTapFilter[FT_LCD_FILTER_FIVE_TAPS];
+
+  static const FT_LcdFiveTapFilter FT_LCD_FILTER_DEFAULT_WEIGHTS =
+                            { 0x08, 0x4d, 0x56, 0x4d, 0x08 };
+  static const FT_LcdFiveTapFilter FT_LCD_FILTER_LIGHT_WEIGHTS =
+                            { 0x00, 0x55, 0x56, 0x55, 0x00 };
+
+
 
   /**************************************************************************
    *

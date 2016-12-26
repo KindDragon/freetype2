@@ -347,6 +347,16 @@ FT_BEGIN_HEADER
   /*      created.  @FT_Reference_Face increments this counter, and        */
   /*      @FT_Done_Face only destroys a face if the counter is~1,          */
   /*      otherwise it simply decrements it.                               */
+  /*
+   *    no_stem_darkening ::
+   *      Overrides the module-level default, see e.g. @stem-darkening[cff].
+   *      FALSE and TRUE toggle stem darkening on and off, respectively, -1
+   *      means to use the module/driver default.
+   *
+   *    lcd_weights ::
+   *      Overrides the library default with custom weights for the 5-tap FIR
+   *      filter. {0, 0, 0, 0, 0} means to use the library default.
+   */
   /*                                                                       */
   typedef struct  FT_Face_InternalRec_
   {
@@ -362,6 +372,11 @@ FT_BEGIN_HEADER
 
     FT_Int              refcount;
 
+    FT_Char             no_stem_darkening;
+
+#ifdef FT_CONFIG_OPTION_SUBPIXEL_RENDERING
+    FT_LcdFiveTapFilter lcd_weights;   /* Preset or custom filter weights. */
+#endif
   } FT_Face_InternalRec;
 
 
@@ -780,7 +795,13 @@ FT_BEGIN_HEADER
 
   typedef void  (*FT_Bitmap_LcdFilterFunc)( FT_Bitmap*      bitmap,
                                             FT_Render_Mode  render_mode,
-                                            FT_Library      library );
+                                            FT_Byte*        weights );
+
+  /* This is the default LCD filter, an in-place, 5-tap FIR filter. */
+  FT_BASE( void )
+  ft_lcd_filter_fir( FT_Bitmap*          bitmap,
+                     FT_Render_Mode      mode,
+                     FT_LcdFiveTapFilter weights );
 
 
   /*************************************************************************/
@@ -876,7 +897,7 @@ FT_BEGIN_HEADER
 #ifdef FT_CONFIG_OPTION_SUBPIXEL_RENDERING
     FT_LcdFilter             lcd_filter;
     FT_Int                   lcd_extra;        /* number of extra pixels */
-    FT_Byte                  lcd_weights[5];   /* filter weights, if any */
+    FT_LcdFiveTapFilter      lcd_weights;      /* filter weights, if any */
     FT_Bitmap_LcdFilterFunc  lcd_filter_func;  /* filtering callback     */
 #endif
 

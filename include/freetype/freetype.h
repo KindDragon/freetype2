@@ -3583,6 +3583,86 @@ FT_BEGIN_HEADER
 
 
   /*************************************************************************/
+  /*
+   * <Function>
+   *    FT_Face_Option
+   *
+   * <Description>
+   *    This function can be used to set or override certain (library or
+   *    module-wide) options on a face-by-face basis. Useful for finer grained
+   *    control and avoiding locks on shared structures (threads can modify
+   *    their own faces as they see fit).
+   *
+   * <Input>
+   *    face       :: A handle to the source face object.
+   *    num_params :: The number of parameters that follow.
+   *    parameters :: A handle to the num_params FT_Parameters.
+   *
+   * <Return>
+   *    FreeType error code.  0~means success.
+   *
+   * <Note>
+   *    The accepted parameters are:
+   *
+   *    1) FT_FACE_OPTION_ENABLE_STEM_DARKENING:
+   *       Toggles stem darkening. Overrides the module setting.
+   *
+   *       This is a passive setting that only takes effect when the font
+   *       driver or autohinter honors it, which e.g. the CFF driver always
+   *       does, the autohinter only in LIGHT hinting mode (as of version
+   *       2.7.0).
+   *
+   *    2) FT_FACE_OPTION_SET_LCD_FILTER_WEIGHTS:
+   *       Sets the weights for the 5-tap in-place FIR filter used by default
+   *       (the legacy intra-pixel filter is not supported). Overrides the
+   *       library setting. See @lcd_filtering.
+   *
+   *    Pass NULL as data for a tag to reset the option and use the library or
+   *    module default again.
+   *
+   *    Example:
+   *    {
+   *        // Define FT_CONFIG_OPTION_SUBPIXEL_RENDERING for the LCD filter
+   *        // examples to work.
+   *
+   *        FT_Parameter parameter1;
+   *        FT_Bool darken_stems = 1;
+   *        parameter1.tag  = FT_FACE_OPTION_ENABLE_STEM_DARKENING;
+   *        parameter1.data = &darken_stems;
+   *
+   *        FT_Parameter parameter2;
+   *        FT_LcdFiveTapFilter custom_weight = { 0x10, 0x40, 0x70, 0x40, 0x10 };
+   *        parameter2.tag  = FT_FACE_OPTION_SET_LCD_FILTER_WEIGHTS;
+   *        parameter2.data = custom_weight;
+   *
+   *        FT_Parameter parameters[2] = { parameter1, parameter2 };
+   *
+   *        FT_Face_Option( face, 2, parameters );
+   *
+   *        // Switch options around.
+   *        darken_stems = 0;
+   *        ft_memcpy(parameters[1].data, FT_LCD_FILTER_LIGHT_WEIGHTS, FT_LCD_FILTER_FIVE_TAPS);
+   *
+   *        FT_Face_Option( face, 2, parameters );
+   *
+   *        // Example for a single option.
+   *        FT_Parameter parameter3;
+   *        parameter3.tag  = FT_FACE_OPTION_SET_LCD_FILTER_WEIGHTS;
+   *        parameter3.data = NULL; // Reset option to driver/module default
+   *
+   *        FT_Face_Option( face, 1, &parameter3 );
+   *    }
+   */
+  FT_EXPORT( FT_Error )
+  FT_Face_Option( FT_Face       face,
+                  FT_UInt       num_params,
+                  FT_Parameter* parameters);
+
+#define FT_FACE_OPTION_ENABLE_STEM_DARKENING  FT_MAKE_TAG( 'd', 'a', 'r', 'k' )
+#define FT_FACE_OPTION_SET_LCD_FILTER_WEIGHTS FT_MAKE_TAG( 'l', 'c', 'd', 'f' )
+
+
+  /*************************************************************************/
   /*                                                                       */
   /* <Function>                                                            */
   /*    FT_Get_Name_Index                                                  */
