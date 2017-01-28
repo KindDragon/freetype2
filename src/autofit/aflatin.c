@@ -1121,6 +1121,7 @@
     FT_Pos        delta;
     AF_LatinAxis  axis;
     FT_UInt       nn;
+    FT_Int32      y_emboldment = metrics->root.globals->darken_y;
 
 
     if ( dim == AF_DIMENSION_HORZ )
