@@ -132,6 +132,17 @@ endif ()
 project(freetype C)
 
 
+# SOVERSION scheme: CURRENT.AGE.REVISION
+#   If there was an incompatible interface change:
+#     Increment CURRENT. Set AGE and REVISION to 0
+#   If there was a compatible interface change:
+#     Increment AGE. Set REVISION to 0
+#   If the source code was changed, but there were no interface changes:
+#     Increment REVISION.
+set(LIBRARY_VERSION "6.16.0")
+set(LIBRARY_SOVERSION "6")
+
+
 # Disallow in-source builds
 if ("${PROJECT_BINARY_DIR}" STREQUAL "${PROJECT_SOURCE_DIR}")
   message(FATAL_ERROR
@@ -164,10 +175,6 @@ endif ()
 set(VERSION_MAJOR "2")
 set(VERSION_MINOR "9")
 set(VERSION_PATCH "0")
-
-set(PROJECT_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
-set(SHARED_LIBRARY_VERSION ${VERSION_MAJOR}.${VERSION_MINOR})
-
 
 # Compiler definitions for building the library
 add_definitions(-DFT2_BUILD_LIBRARY)
@@ -360,9 +367,8 @@ set_target_properties(
 
 if (BUILD_SHARED_LIBS)
   set_target_properties(freetype PROPERTIES
-    VERSION ${PROJECT_VERSION}
-    SOVERSION ${SHARED_LIBRARY_VERSION}
-  )
+    VERSION ${LIBRARY_VERSION}
+    SOVERSION ${LIBRARY_SOVERSION})
 endif ()
 
 
