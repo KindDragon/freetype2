@@ -209,17 +209,17 @@ if (UNIX)
     FTCONFIG_H)
   if (HAVE_UNISTD_H)
     string(REGEX REPLACE
-      "#undef +(HAVE_UNISTD_H)" "#define \\1"
+      "#undef +(HAVE_UNISTD_H)" "#define \\1 1"
       FTCONFIG_H "${FTCONFIG_H}")
   endif ()
   if (HAVE_FCNTL_H)
     string(REGEX REPLACE
-      "#undef +(HAVE_FCNTL_H)" "#define \\1"
+      "#undef +(HAVE_FCNTL_H)" "#define \\1 1"
       FTCONFIG_H "${FTCONFIG_H}")
   endif ()
   if (HAVE_STDINT_H)
     string(REGEX REPLACE
-      "#undef +(HAVE_STDINT_H)" "#define \\1"
+      "#undef +(HAVE_STDINT_H)" "#define \\1 1"
       FTCONFIG_H "${FTCONFIG_H}")
   endif ()
   string(REPLACE "/undef " "#undef "
