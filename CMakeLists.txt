@@ -149,15 +149,13 @@ set(LIBRARY_SOVERSION "6")
 # Disallow in-source builds
 if ("${PROJECT_BINARY_DIR}" STREQUAL "${PROJECT_SOURCE_DIR}")
   message(FATAL_ERROR
-    "
-In-source builds are not permitted!  Make a separate folder for"
-    " building, e.g.,"
-    "
-  mkdir build; cd build; cmake .."
-    "
-Before that, remove the files created by this failed run with"
-    "
-  rm -rf CMakeCache.txt CMakeFiles")
+    "In-source builds are not permitted!  Make a separate folder for"
+    " building, e.g.,\n"
+    "  cmake -E make_directory build\n"
+    "  cmake -E chdir build cmake ..\n"
+    "Before that, remove the files created by this failed run with\n"
+    "  cmake -E remove CMakeCache.txt\n"
+    "  cmake -E remove_directory CMakeFiles")
 endif ()
 
 
