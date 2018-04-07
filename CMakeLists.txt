@@ -83,9 +83,12 @@
 #   (this is compatible with the same CMake variables in zlib's CMake
 #   support).
 
-
-cmake_minimum_required(VERSION 2.6)
-
+# FreeType is build as part of the Python binding freetype-py. Python
+# extensions for Linux are usually compiled against the manylinux1 target (PEP
+# 513); the Manylinux1 Docker container provided by PyPa happens to contain a
+# CentOS 5.11 with cmake 2.8.11.2 installed. Raising the minimum version makes
+# sure this requirement is actually tested.
+cmake_minimum_required(VERSION 2.8.11.2)
 
 include(CheckIncludeFile)
 
