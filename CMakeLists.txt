@@ -173,14 +173,6 @@ if (BUILD_FRAMEWORK)
 endif ()
 
 
-# Compiler definitions for building the library
-add_definitions(-DFT2_BUILD_LIBRARY)
-if (WIN32)
-  add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-  add_definitions(-D_CRT_NONSTDC_NO_WARNINGS)
-endif ()
-
-
 # Find dependencies
 foreach (d ZLIB BZip2 PNG HarfBuzz)
   string(TOUPPER "${d}" D)
@@ -335,6 +327,13 @@ set_target_properties(
   freetype PROPERTIES
     C_VISIBILITY_PRESET hidden)
 
+target_compile_definitions(
+  freetype PRIVATE FT2_BUILD_LIBRARY)
+
+if (WIN32)
+  target_compile_definitions(
+    freetype PRIVATE _CRT_SECURE_NO_WARNINGS _CRT_NONSTDC_NO_WARNINGS)
+endif ()
 
 if (BUILD_SHARED_LIBS)
   set_target_properties(freetype PROPERTIES
