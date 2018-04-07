@@ -145,6 +145,15 @@ set(VERSION_PATCH "0")
 set(LIBRARY_VERSION "6.16.0")
 set(LIBRARY_SOVERSION "6")
 
+# These options mean "require x and complain if not found". They'll get
+# optionally found anyway. Use `-DCMAKE_DISABLE_FIND_PACKAGE_x=TRUE` to disable
+# searching for a packge entirely (x is the CMake package name, so "BZip2"
+# instead of "BZIP2").
+option(FT_WITH_ZLIB "Use system zlib instead of internal library." OFF)
+option(FT_WITH_BZIP2 "Support bzip2 compressed fonts." OFF)
+option(FT_WITH_PNG "Support PNG compressed OpenType embedded bitmaps." OFF)
+option(FT_WITH_HARFBUZZ "Improve auto-hinting of OpenType fonts." OFF)
+
 
 # Disallow in-source builds
 if ("${PROJECT_BINARY_DIR}" STREQUAL "${PROJECT_SOURCE_DIR}")
@@ -177,16 +186,10 @@ endif ()
 foreach (d ZLIB BZip2 PNG HarfBuzz)
   string(TOUPPER "${d}" D)
 
-  if (DEFINED WITH_${d} OR DEFINED WITH_${D})
-    if (WITH_${d} OR WITH_${D})
-      find_package(${d} QUIET REQUIRED)
-    endif ()
-  else ()
-    find_package(${d} QUIET)
-  endif ()
-
-  if (${d}_FOUND OR ${D}_FOUND)
-    message(STATUS "Building with ${d}")
+  if (FT_WITH_${D} STREQUAL ON)
+    find_package(${d} REQUIRED)
+  else()
+    find_package(${d})
   endif ()
 endforeach ()
 
