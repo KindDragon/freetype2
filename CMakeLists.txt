@@ -89,9 +89,10 @@
 # CentOS 5.11 with cmake 2.8.11.2 installed. Raising the minimum version makes
 # sure this requirement is actually tested.
 cmake_minimum_required(VERSION 2.8.11.2)
+# Allow symbol visibility settings also on static libraries.
+cmake_policy(SET CMP0063 NEW)
 
 include(CheckIncludeFile)
-
 
 # CMAKE_TOOLCHAIN_FILE must be set before `project' is called, which
 # configures the base build environment and references the toolchain file
@@ -351,6 +352,10 @@ add_library(freetype
   ${PRIVATE_HEADERS}
   ${BASE_SRCS}
 )
+
+set_target_properties(
+  freetype PROPERTIES
+    C_VISIBILITY_PRESET hidden)
 
 
 if (BUILD_SHARED_LIBS)
