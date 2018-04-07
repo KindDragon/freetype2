@@ -246,9 +246,6 @@ if (HARFBUZZ_FOUND)
 endif ()
 file(WRITE "${PROJECT_BINARY_DIR}/include/freetype/config/ftoption.h"
   "${FTOPTION_H}")
-# Specify library include directories
-include_directories("${PROJECT_SOURCE_DIR}/include")
-include_directories(BEFORE "${PROJECT_BINARY_DIR}/include")
 
 
 file(GLOB PUBLIC_HEADERS "include/ft2build.h" "include/freetype/*.h")
@@ -341,6 +338,14 @@ if (BUILD_SHARED_LIBS)
     SOVERSION ${LIBRARY_SOVERSION})
 endif ()
 
+target_include_directories(
+  freetype BEFORE  # Pick up ftconfig.h and ftoption.h generated above.
+    PRIVATE "${PROJECT_BINARY_DIR}/include")
+
+target_include_directories(
+  freetype
+    PRIVATE "${PROJECT_SOURCE_DIR}/include")
+
 
 if (BUILD_FRAMEWORK)
   set_property(SOURCE ${PUBLIC_CONFIG_HEADERS}
@@ -367,20 +372,20 @@ endif ()
 
 if (ZLIB_FOUND)
   target_link_libraries(freetype ${MAYBE_PRIVATE} ${ZLIB_LIBRARIES})
-  include_directories(${ZLIB_INCLUDE_DIRS})
+  target_include_directories(freetype PRIVATE ${ZLIB_INCLUDE_DIRS})
 endif ()
 if (BZIP2_FOUND)
   target_link_libraries(freetype ${MAYBE_PRIVATE} ${BZIP2_LIBRARIES})
-  include_directories(${BZIP2_INCLUDE_DIR}) # not BZIP2_INCLUDE_DIRS
+  target_include_directories(freetype PRIVATE ${BZIP2_INCLUDE_DIR}) # not BZIP2_INCLUDE_DIRS
 endif ()
 if (PNG_FOUND)
   add_definitions(${PNG_DEFINITIONS})
   target_link_libraries(freetype ${MAYBE_PRIVATE} ${PNG_LIBRARIES})
-  include_directories(${PNG_INCLUDE_DIRS})
+  target_include_directories(freetype PRIVATE ${PNG_INCLUDE_DIRS})
 endif ()
 if (HARFBUZZ_FOUND)
   target_link_libraries(freetype ${MAYBE_PRIVATE} ${HARFBUZZ_LIBRARIES})
-  include_directories(${HARFBUZZ_INCLUDE_DIRS})
+  target_include_directories(freetype PRIVATE ${HARFBUZZ_INCLUDE_DIRS})
 endif ()
 
 
