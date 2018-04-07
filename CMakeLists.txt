@@ -160,7 +160,7 @@ endif ()
 
 
 # Add local cmake modules
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/builds/cmake)
+list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/builds/cmake)
 
 
 if (BUILD_FRAMEWORK)
@@ -331,24 +331,22 @@ set(BASE_SRCS
 )
 
 if (WIN32)
-  set(BASE_SRCS ${BASE_SRCS} builds/windows/ftdebug.c)
+  list(APPEND BASE_SRCS builds/windows/ftdebug.c)
 elseif (WINCE)
-  set(BASE_SRCS ${BASE_SRCS} builds/wince/ftdebug.c)
+  list(APPEND BASE_SRCS builds/wince/ftdebug.c)
 else ()
-  set(BASE_SRCS ${BASE_SRCS} src/base/ftdebug.c)
+  list(APPEND BASE_SRCS src/base/ftdebug.c)
 endif ()
-
 
 if (BUILD_FRAMEWORK)
-  set(BASE_SRCS
-    ${BASE_SRCS}
-    builds/mac/freetype-Info.plist
-  )
+  list(APPEND BASE_SRCS builds/mac/freetype-Info.plist)
 endif ()
+
 
 if (NOT DISABLE_FORCE_DEBUG_POSTFIX)
   set(CMAKE_DEBUG_POSTFIX d)
 endif()
+
 
 add_library(freetype
   ${PUBLIC_HEADERS}
