@@ -362,7 +362,6 @@ if (BUILD_SHARED_LIBS)
   set_target_properties(freetype PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${SHARED_LIBRARY_VERSION}
-    COMPILE_DEFINITIONS freetype_EXPORTS
   )
 endif ()
 
