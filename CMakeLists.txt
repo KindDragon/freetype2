@@ -12,35 +12,44 @@
 # fully.
 #
 #
-# As a preliminary, create a compilation directory and change into it, for
-# example
+# The following will 1. create a build directory and 2. change into it and
+# call cmake to configure the build with default parameters as a static
+# library.
 #
-#   mkdir ~/freetype2.compiled
-#   cd ~/freetype2.compiled
-#
-# Now you can say
-#
-#   cmake <path-to-freetype2-src-dir>
-#
-# to create a Makefile that builds a static version of the library.
+#   cmake -E make_directory build
+#   cmake -E chdir build cmake ..
 #
 # For a dynamic library, use
 #
-#   cmake -D BUILD_SHARED_LIBS:BOOL=true <path-to-freetype2-src-dir>
+#   cmake -E chdir build cmake -D BUILD_SHARED_LIBS:BOOL=true ..
 #
 # For a framework on OS X, use
 #
-#   cmake -D BUILD_FRAMEWORK:BOOL=true -G Xcode <path-to-freetype2-src-dir>
-#
-# instead.
+#   cmake -E chdir build cmake -G Xcode -D BUILD_FRAMEWORK:BOOL=true ..
 #
 # For an iOS static library, use
 #
-#   cmake -D IOS_PLATFORM=OS -G Xcode <path-to-freetype2-src-dir>
+#   cmake -E chdir build cmake -G Xcode -D IOS_PLATFORM=OS ..
 #
 # or
 #
-#   cmake -D IOS_PLATFORM=SIMULATOR -G Xcode <path-to-freetype2-src-dir>
+#   cmake -E chdir build cmake -G Xcode -D IOS_PLATFORM=SIMULATOR ..
+#
+# Finally, build the project with:
+#
+#   cmake --build build
+#
+# Install it with
+#
+#   (sudo) cmake --build build --target install
+#
+# A binary distribution can be made with
+#
+#   cmake --build build --config Release --target package
+#
+# A source distribution can be made with
+#
+#   cmake --build build --target package_source
 #
 # Please refer to the cmake manual for further options, in particular, how
 # to modify compilation and linking parameters.
