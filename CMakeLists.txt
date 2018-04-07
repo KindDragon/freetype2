@@ -125,7 +125,7 @@ else ()
 endif ()
 
 
-project(freetype)
+project(freetype C)
 
 
 # Disallow in-source builds
