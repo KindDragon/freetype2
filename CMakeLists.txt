@@ -199,15 +199,7 @@ foreach (d ZLIB BZip2 PNG HarfBuzz)
 endforeach ()
 
 
-message(STATUS
-  "Creating directory ${PROJECT_BINARY_DIR}/include/freetype/config")
-file(MAKE_DIRECTORY "${PROJECT_BINARY_DIR}/include/freetype/config")
-
-
 # Create the configuration file
-message(STATUS
-  "Creating file ${PROJECT_BINARY_DIR}/include/freetype/config/ftconfig.h")
-
 if (UNIX)
   check_include_file("unistd.h" HAVE_UNISTD_H)
   check_include_file("fcntl.h" HAVE_FCNTL_H)
@@ -246,9 +238,6 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E copy_if_different
 
 
 # Create the options file
-message(STATUS
-  "Creating file ${PROJECT_BINARY_DIR}/include/freetype/config/ftoption.h")
-
 file(READ "${PROJECT_SOURCE_DIR}/include/freetype/config/ftoption.h"
   FTOPTION_H)
 if (ZLIB_FOUND)
