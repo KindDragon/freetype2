@@ -79,14 +79,16 @@
 #   (this is compatible with the same CMake variables in zlib's CMake
 #   support).
 
-# FreeType is build as part of the Python binding freetype-py. Python
-# extensions for Linux are usually compiled against the manylinux1 target (PEP
-# 513); the Manylinux1 Docker container provided by PyPa happens to contain a
-# CentOS 5.11 with cmake 2.8.11.2 installed. Raising the minimum version makes
-# sure this requirement is actually tested.
-cmake_minimum_required(VERSION 2.8.11.2)
-# Allow symbol visibility settings also on static libraries.
-cmake_policy(SET CMP0063 NEW)
+# FreeType explicitly marks the API to be exported and relies on the compiler
+# to hide all other symbols. CMake supports a C_VISBILITY_PRESET property
+# starting with 2.8.12.
+cmake_minimum_required(VERSION 2.8.12)
+
+if (NOT CMAKE_VERSION VERSION_LESS 3.3)
+  # Allow symbol visibility settings also on static libraries. CMake < 3.3
+  # only sets the propery on a shared library build.
+  cmake_policy(SET CMP0063 NEW)
+endif ()
 
 include(CheckIncludeFile)
 
@@ -345,6 +347,9 @@ target_include_directories(
   freetype
     PRIVATE "${PROJECT_SOURCE_DIR}/include")
 
+target_include_directories(
+  freetype
+    PUBLIC $<INSTALL_INTERFACE:include/freetype2>)
 
 if (BUILD_FRAMEWORK)
   set_property(SOURCE ${PUBLIC_CONFIG_HEADERS}
@@ -358,32 +363,22 @@ if (BUILD_FRAMEWORK)
   )
 endif ()
 
-if (NOT CMAKE_VERSION VERSION_LESS 2.8.12)
-  target_include_directories(freetype
-    PUBLIC $<INSTALL_INTERFACE:include/freetype2>)
-endif ()
-
-if (CMAKE_VERSION VERSION_LESS 2.8.12)
-  set(MAYBE_PRIVATE "")
-else ()
-  set(MAYBE_PRIVATE "PRIVATE")
-endif ()
 
 if (ZLIB_FOUND)
-  target_link_libraries(freetype ${MAYBE_PRIVATE} ${ZLIB_LIBRARIES})
+  target_link_libraries(freetype PRIVATE ${ZLIB_LIBRARIES})
   target_include_directories(freetype PRIVATE ${ZLIB_INCLUDE_DIRS})
 endif ()
 if (BZIP2_FOUND)
-  target_link_libraries(freetype ${MAYBE_PRIVATE} ${BZIP2_LIBRARIES})
+  target_link_libraries(freetype PRIVATE ${BZIP2_LIBRARIES})
   target_include_directories(freetype PRIVATE ${BZIP2_INCLUDE_DIR}) # not BZIP2_INCLUDE_DIRS
 endif ()
 if (PNG_FOUND)
-  add_definitions(${PNG_DEFINITIONS})
-  target_link_libraries(freetype ${MAYBE_PRIVATE} ${PNG_LIBRARIES})
+  target_link_libraries(freetype PRIVATE ${PNG_LIBRARIES})
+  target_compile_definitions(freetype PRIVATE ${PNG_DEFINITIONS})
   target_include_directories(freetype PRIVATE ${PNG_INCLUDE_DIRS})
 endif ()
 if (HARFBUZZ_FOUND)
-  target_link_libraries(freetype ${MAYBE_PRIVATE} ${HARFBUZZ_LIBRARIES})
+  target_link_libraries(freetype PRIVATE ${HARFBUZZ_LIBRARIES})
   target_include_directories(freetype PRIVATE ${HARFBUZZ_INCLUDE_DIRS})
 endif ()
 
