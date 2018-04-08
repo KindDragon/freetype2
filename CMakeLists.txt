@@ -64,15 +64,14 @@
 # . `CMakeLists.txt' is provided as-is since it is normally not used by the
 #   developer team.
 #
-# . If you want to disable the automatic generation of the distribution
-#   targets, add the `-D FREETYPE_NO_DIST=true' command line argument.
-#
-# . Set the `WITH_ZLIB', `WITH_BZip2', `WITH_PNG', and `WITH_HarfBuzz'
-#   CMake variables to `ON' or `OFF' to force or skip using a dependency.
+# . Set the `FT_WITH_ZLIB', `FT_WITH_BZIP2', `FT_WITH_PNG', and
+#   `FT_WITH_HARFBUZZ' CMake variables to `ON' to force using a dependency.
 #   Leave a variable undefined (which is the default) to use the dependency
-#   only if it is available.  Example:
+#   only if it is available.  Set `CMAKE_DISABLE_FIND_PACKAGE_HarfBuzz=TRUE' to
+#   disable a dependency completely (CMake package name, so `BZip2' instead of
+#   `BZIP2'). Example:
 #
-#     cmake ... -DWITH_ZLIB=ON -DWITH_HarfBuzz=OFF ...
+#     cmake -DFT_WITH_ZLIB=ON -DCMAKE_DISABLE_FIND_PACKAGE_HarfBuzz=TRUE [...]
 #
 # . Installation of FreeType can be controlled with the CMake variables
 #   `SKIP_INSTALL_HEADERS', `SKIP_INSTALL_LIBRARIES', and `SKIP_INSTALL_ALL'
