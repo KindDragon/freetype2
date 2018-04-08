@@ -54,16 +54,28 @@ if (HARFBUZZ_INCLUDE_DIRS)
     endif ()
 endif ()
 
-if ("${Harfbuzz_FIND_VERSION}" VERSION_GREATER "${HARFBUZZ_VERSION}")
+if ("${harfbuzz_FIND_VERSION}" VERSION_GREATER "${HARFBUZZ_VERSION}")
     message(FATAL_ERROR "Required version (" ${Harfbuzz_FIND_VERSION} ") is higher than found version (" ${CAIRO_VERSION} ")")
 endif ()
 
 include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(Harfbuzz REQUIRED_VARS HARFBUZZ_INCLUDE_DIRS HARFBUZZ_LIBRARIES
-                                           VERSION_VAR HARFBUZZ_VERSION)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(
+    harfbuzz 
+        REQUIRED_VARS HARFBUZZ_INCLUDE_DIRS HARFBUZZ_LIBRARIES
+        VERSION_VAR HARFBUZZ_VERSION)
 
 mark_as_advanced(
     HARFBUZZ_INCLUDE_DIRS
     HARFBUZZ_LIBRARIES
-    HARFBUZZ_ICU_LIBRARIES
 )
+
+# Allows easy linking as in 
+#   target_link_libraries(freetype PRIVATE Harfbuzz::Harfbuzz)
+if (NOT CMAKE_VERSION VERSION_LESS 3.1)
+    if (HARFBUZZ_FOUND AND NOT TARGET Harfbuzz::Harfbuzz)
+        add_library(Harfbuzz::Harfbuzz INTERFACE IMPORTED)
+        set_target_properties(
+            Harfbuzz::Harfbuzz PROPERTIES
+                INTERFACE_INCLUDE_DIRECTORIES "${HARFBUZZ_INCLUDE_DIRS}")
+    endif ()
+endif ()
