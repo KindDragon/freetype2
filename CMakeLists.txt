@@ -47,10 +47,6 @@
 #
 #   cmake --build build --config Release --target package
 #
-# A source distribution can be made with
-#
-#   cmake --build build --target package_source
-#
 # Please refer to the cmake manual for further options, in particular, how
 # to modify compilation and linking parameters.
 #
