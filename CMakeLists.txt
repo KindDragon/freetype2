@@ -297,7 +297,9 @@ set(BASE_SRCS
 )
 
 if (WIN32)
-  list(APPEND BASE_SRCS builds/windows/ftdebug.c)
+  enable_language(RC)
+  list(APPEND BASE_SRCS builds/windows/ftdebug.c
+                        src/base/ftver.rc)
 elseif (WINCE)
   list(APPEND BASE_SRCS builds/wince/ftdebug.c)
 else ()
