@@ -55,7 +55,7 @@ if (HARFBUZZ_INCLUDE_DIRS)
 endif ()
 
 if ("${harfbuzz_FIND_VERSION}" VERSION_GREATER "${HARFBUZZ_VERSION}")
-    message(FATAL_ERROR "Required version (" ${Harfbuzz_FIND_VERSION} ") is higher than found version (" ${CAIRO_VERSION} ")")
+    message(FATAL_ERROR "Required version (" ${harfbuzz_FIND_VERSION} ") is higher than found version (" ${HARFBUZZ_VERSION} ")")
 endif ()
 
 include(FindPackageHandleStandardArgs)
