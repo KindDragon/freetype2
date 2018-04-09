@@ -190,7 +190,7 @@ if (FT_WITH_PNG)
   find_package(PNG REQUIRED)
 else ()
   find_package(PNG)
-  endif ()
+endif ()
 
 if (FT_WITH_ZLIB)
   find_package(ZLIB REQUIRED)
@@ -378,22 +378,28 @@ if (BUILD_FRAMEWORK)
 endif ()
 
 
+set(PKG_CONFIG_REQUIRED_PRIVATE "")
+
 if (ZLIB_FOUND)
   target_link_libraries(freetype PRIVATE ${ZLIB_LIBRARIES})
   target_include_directories(freetype PRIVATE ${ZLIB_INCLUDE_DIRS})
+  list(APPEND PKG_CONFIG_REQUIRED_PRIVATE zlib)
 endif ()
 if (BZIP2_FOUND)
   target_link_libraries(freetype PRIVATE ${BZIP2_LIBRARIES})
   target_include_directories(freetype PRIVATE ${BZIP2_INCLUDE_DIR}) # not BZIP2_INCLUDE_DIRS
+  list(APPEND PKG_CONFIG_REQUIRED_PRIVATE bzip2)
 endif ()
 if (PNG_FOUND)
   target_link_libraries(freetype PRIVATE ${PNG_LIBRARIES})
   target_compile_definitions(freetype PRIVATE ${PNG_DEFINITIONS})
   target_include_directories(freetype PRIVATE ${PNG_INCLUDE_DIRS})
+  list(APPEND PKG_CONFIG_REQUIRED_PRIVATE libpng)
 endif ()
 if (HARFBUZZ_FOUND)
   target_link_libraries(freetype PRIVATE ${HARFBUZZ_LIBRARIES})
   target_include_directories(freetype PRIVATE ${HARFBUZZ_INCLUDE_DIRS})
+  list(APPEND PKG_CONFIG_REQUIRED_PRIVATE harfbuzz)
 endif ()
 
 
@@ -417,6 +423,35 @@ if (NOT SKIP_INSTALL_HEADERS AND NOT SKIP_INSTALL_ALL)
 endif ()
 
 if (NOT SKIP_INSTALL_LIBRARIES AND NOT SKIP_INSTALL_ALL)
+  # Generate the pkg-config file
+  if (UNIX)
+    file(READ ${PROJECT_SOURCE_DIR}/builds/unix/freetype2.in FREETYPE2_PC_IN)
+
+    string(REPLACE ";" ", " PKG_CONFIG_REQUIRED_PRIVATE "${PKG_CONFIG_REQUIRED_PRIVATE}")
+
+    string(REPLACE "%prefix%" ${CMAKE_INSTALL_PREFIX}
+           FREETYPE2_PC_IN ${FREETYPE2_PC_IN})
+    string(REPLACE "%exec_prefix%" ${CMAKE_INSTALL_FULL_LIBEXECDIR}
+           FREETYPE2_PC_IN ${FREETYPE2_PC_IN})
+    string(REPLACE "%libdir%" ${CMAKE_INSTALL_FULL_LIBDIR}
+           FREETYPE2_PC_IN ${FREETYPE2_PC_IN})
+    string(REPLACE "%includedir%" ${CMAKE_INSTALL_FULL_INCLUDEDIR}
+           FREETYPE2_PC_IN ${FREETYPE2_PC_IN})
+    string(REPLACE "%ft_version%" "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}"
+           FREETYPE2_PC_IN ${FREETYPE2_PC_IN})
+    string(REPLACE "%REQUIRES_PRIVATE%" ${PKG_CONFIG_REQUIRED_PRIVATE}
+           FREETYPE2_PC_IN ${FREETYPE2_PC_IN})
+    string(REPLACE "%LIBS_PRIVATE%" ""
+           FREETYPE2_PC_IN ${FREETYPE2_PC_IN})
+
+    file(WRITE ${PROJECT_BINARY_DIR}/freetype2.pc ${FREETYPE2_PC_IN})
+
+    install(
+      FILES ${PROJECT_BINARY_DIR}/freetype2.pc
+      DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
+      COMPONENT pkgconfig)
+  endif ()
+
   install(
     TARGETS freetype
       EXPORT freetype-targets
