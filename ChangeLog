@@ -33,6 +33,8 @@
 	On Windows, src/base/ftver.rc is compiled to decorate the library with
 	version and copyright information.
 
+	Generate pkg-config file.
+
 2018-04-06  Alexei Podtelezhnikov  <apodtele@gmail.com>
 
 	[windows, wince] Clean up legacy project files.
